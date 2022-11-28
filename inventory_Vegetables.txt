@@ -1,0 +1,12 @@
+Lettuce,2.99
+Spinach,0.99
+Silverbeet,2.00
+Cabbage,1.50
+Cauliflower,4.99
+Brusselssprouts,3.99
+Broccoli,3.69
+Potato,3.55
+Celery,1.90
+Asparagus,2.75
+Onion,2.00
+Garlic,3.99

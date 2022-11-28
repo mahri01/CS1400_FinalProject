@@ -1,0 +1,14 @@
+Oranges,2.99
+Grapefruits,6.99
+Mandarins,1.99
+Limes,2.00
+Apples,1.00
+Pears,5.00
+Strawberries,3.59
+Raspberries,4.00
+Blueberries,4.00
+Kiwifruit,3.99
+Passionfruit,10.00
+Watermelons,25.00
+Rockmelons,15.00
+Honeydewmelons,15.00

@@ -1,0 +1,16 @@
+DarkChocolate,5.99
+KitKat,1.99
+Cheez-It,2.99
+Cheetos,2.99
+Snickers,3.99
+Cheerios,6.99
+Fritos,1.99
+Pringles,1.99
+Lay'sChips,2.99
+Ritz,2.99
+OreoCookies,7.99
+Hershey's,0.99
+M&M's,1.99
+HomemadeCookies,9.99
+MixedofhealthySnacks,19.99
+Mixofdriedfruits,29.99
