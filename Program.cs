@@ -11,10 +11,11 @@ namespace MoneySave
         public static void Main(string[] path)
         {
             WriteLine(" ----------Welcome to the MoneySave Store! ----------");
-            Write("Are you a customer or a manager? ");
-            string userResp = ReadLine();
             while (true)
             {
+                Write("Are you a customer or a manager? ");
+                string userResp = ReadLine();
+
                 if (userResp.ToLower() == "customer")
                 {
                     CustomerProfile.CustomerMembership();
@@ -33,19 +34,17 @@ namespace MoneySave
 }
 
 /*
-- Load inventory from a file, save to a file.   
+- Load inventory from a file, save to a file.    Done!
 
-- List products and quantities available.     Done!
+- List products.   Done!
 
-- Allow customer to add one or more items to cart.
+- Allow customer to add one or more items to cart.     Done!
 
-- Show customer items and cost breakdown.   Done!
+- Show customer items and cost breakdown.    Done!
 
 - Calculate and add tax (8%).
 
-- Calculate and apply discounts (10% for $100 or more).
-
-- Track users who have membership with a file. (username, password)   Done!
+- Track users who have membership with a file. (username, password)      Done!
 
 - Allow user to buy membership ($100) or sign into existing one.    Done!
 

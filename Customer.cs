@@ -17,9 +17,14 @@ namespace Customer
         public static void CustomerMembership()
         {
             WriteLine("\n Welcome to the Customer Profile!");
-            Write("Do you have a membership? Yes? or No? : ");
-            string membership = ReadLine();
-            if (membership.ToLower() == "no")
+            Write("Do you have a membership? Yes? or No? : "); 
+            string membership = ReadLine().ToLower();
+            while (membership != "no" && membership != "yes")
+            {
+                Write("Invalid input, do you have a membership? Yes? or No? : ");
+                membership = ReadLine().ToLower();
+            }
+            if (membership == "no")
             {
                 Write("If you have a membership, you will have 30% discount at the end! Do you want to buy a membership for $100: ");
                 string buyMembership = ReadLine();
@@ -46,7 +51,7 @@ namespace Customer
                 var username = ReadLine();
                 Write("Password: ");
                 var password = ReadLine();
-                bool signInSuccess = false; //bollean is to keep track if the credentials are true. 
+                bool signInSuccess = false;
                 string[] Members;
                 Members = File.ReadAllLines("membership.txt");
                 foreach (var member in Members)
@@ -75,29 +80,43 @@ namespace Customer
         public static void CustomerMenu()
         {
             ReadAllProductsFromFile();
-
             while (true)
             {
-                WriteLine("1. Show Inventory");
-                WriteLine("2. Buy Inventory");
-                Write(" What would you like to do? ");
-                string choice = ReadLine();
-                if (choice == "1")
+                try
                 {
-                    ShowCustomerInventory();
-                    CustomerBuyInventory();
+                    WriteLine("1. Show Inventory");
+                    WriteLine("2. Buy Inventory");
+                    WriteLine("3. Show Cart");
+                    WriteLine("4. Checkout");
+                    Write(" What would you like to do? ");
+                    int choice = Convert.ToInt32(ReadLine());
+
+                    switch (choice)
+                    {
+                        case 1:
+                            ShowCustomerInventory();
+                            CustomerBuyInventory();
+                            break;
+                        case 2:
+                            CustomerBuyInventory();
+                            break;
+                        case 3:
+                            ShowCart();
+                            break;
+                        case 4:
+                            ChekoutTheItem();
+                            break;
+                        default:
+                            WriteLine("Invalid choice, please try again!");
+                            break;
+                    }
                 }
-                else if (choice == "2")
+                catch (Exception ex)
                 {
-                    CustomerBuyInventory();
-                }
-                else
-                {
-                    WriteLine("Invalid choice, please try again!");
+                    Console.WriteLine("Invalid choice, please try again!");
                 }
             }
         }
-
         public static void ReadAllProductsFromFile()
         {
             Fruits = File.ReadAllLines("inventory_Fruits.txt");
@@ -139,6 +158,7 @@ namespace Customer
             Write("What do you want to buy: ");
             string itemName = ReadLine();
             bool itemFound = false;
+            string itemQtyLbl = "";
             string[] itemInfo = { };
 
             foreach (var fruit in Fruits)
@@ -147,6 +167,7 @@ namespace Customer
                 if (itemName.ToLower() == fruitInfo[0].ToLower())
                 {
                     itemFound = true;
+                    itemQtyLbl = "lb";
                     itemInfo = fruitInfo;
                 }
             }
@@ -156,6 +177,7 @@ namespace Customer
                 if (itemName.ToLower() == vegetableInfo[0].ToLower())
                 {
                     itemFound = true;
+                    itemQtyLbl = "lb";
                     itemInfo = vegetableInfo;
                 }
             }
@@ -165,33 +187,91 @@ namespace Customer
                 if (itemName.ToLower() == snackInfo[0].ToLower())
                 {
                     itemFound = true;
+                    itemQtyLbl = "pcs";
                     itemInfo = snackInfo;
                 }
             }
             if (itemFound)
             {
-                WriteLine($"This fruit  costs ${itemInfo[1]}, how many lb do you want to buy?");
+                WriteLine($"It costs ${itemInfo[1]}, how many lb or pieces do you want to buy?");
                 var lb = ReadLine();
                 var totalCost = Convert.ToDouble(lb) * Convert.ToDouble(itemInfo[1]);
                 WriteLine("The total cost is $" + String.Format("{0:0.00}", totalCost));
+                Write("Do you want to put it in your cart? ");
+                string userCart = ReadLine();
+                string[] customerCart;
+                var path = "customerCart.txt";
+                customerCart = File.ReadAllLines(path);
+                if (userCart.ToLower() == "yes")
+                {
+                    Array.Resize(ref customerCart, customerCart.Length + 1);
+                    customerCart[customerCart.Length - 1] = itemName + "," + lb + itemQtyLbl + "," + totalCost.ToString();
+
+                    File.WriteAllLines(path, customerCart);
+                    WriteLine("Your item has been added into your cart!");
+                }
+                else if (userCart.ToLower() == "no")
+                {
+                    CustomerMenu();
+                }
+                else
+                {
+                    WriteLine("Sorry, I can't recognize what you said! Please, say 'yes' or 'no'");
+                }
             }
             else
             {
                 WriteLine("Sorry, we don't have it right now");
             }
         }
+        public static void ShowCart()
+        {
+            WriteLine("These are the items you have in your cart:");
+            string[] customerCart = File.ReadAllLines("customerCart.txt");
+            foreach (string item in customerCart)
+            {
+                string[] itemInfo = item.Split(',');
+                WriteLine(itemInfo[0] + " " + itemInfo[1] + " " + "$" + itemInfo[2]);
+            }
+        }
+        public static void ChekoutTheItem()
+        {
+            ShowCart();
+            string[] customerCart = File.ReadAllLines("customerCart.txt");
+            int number = 0;
+            // number = Math.Abs(number);
+            double sum = 0;
+
+            foreach (var item in customerCart)
+            {
+                string[] itemInfo = item.Split(',');
+                double itemPrice;
+                bool isDigit = double.TryParse(itemInfo[2], out itemPrice);
+                // if (isDigit)
+                // {
+                //     sum = sum + (itemPrice);
+                // }
+                // while (number != 0)
+                // {
+                //     sum += number % 8;
+                //     number /= 8;
+                // }
+                // Console.WriteLine(sum);
+            }
+            WriteLine("The total price of your products is $ " + String.Format("{0:0.00}", sum));
+            WriteLine("Thank you for shopping!");
+            File.WriteAllText("customerCart.txt", "");
+        }
     }
 }
-// ask to put in to the cart. 3. show cart 4. checkout. 
-
-// try
-// {
-//     int indexResp = Int32.Parse(indexNum);
-//     Console.WriteLine(indexResp);
-// }
-// catch (FormatException)
-// {
-//     Console.WriteLine($"Sorry, I can't recognize '{indexNum}'. Please write only an index number of an item.");
-// }
-//test
-// debugging
+// why price doesnt show at checkout
+// when checkout, user who has membership will have 30% discount.
+// if they want to buy membership, add $100 when checkout. 
+// add 8% tax when checkout for everyone. 
+// use list
+// test
+// tuples
+// parallel arrays
+// check if there is any whitespace
+// meaningful names
+// is my switch correct?

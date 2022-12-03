@@ -42,7 +42,6 @@ namespace Manager
                 {
                     string FruitStrings = File.ReadAllText("inventory_Fruits.txt");
                     WriteLine(FruitStrings);
-
                 }
                 else if (inventoryType.ToLower() == "vegetables")
                 {
