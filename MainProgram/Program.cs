@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Manager;
 using Customer;
 using static System.Console;
 
@@ -13,21 +12,8 @@ namespace MoneySave
             WriteLine(" ----------Welcome to the MoneySave Store! ----------");
             while (true)
             {
-                Write("Are you a customer or a manager? ");
-                string userResp = ReadLine();
+                CustomerProfile.CustomerMembership();
 
-                if (userResp.ToLower() == "customer")
-                {
-                    CustomerProfile.CustomerMembership();
-                }
-                else if (userResp.ToLower() == "manager")
-                {
-                    ManagerProfile.ManagerMenu();
-                }
-                else
-                {
-                    WriteLine("I can't recognize what you said. Please type manager or customer! Thank you!");
-                }
             }
         }
     }

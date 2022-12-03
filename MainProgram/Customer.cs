@@ -13,11 +13,14 @@ namespace Customer
         static string[] Fruits = { };
         static string[] Vegetables = { };
         static string[] Snacks = { };
-
+        const double discountPercentage = 0.3;
+        const double membershipPrice = 100;
+        const double taxRate = 0.08;
+        static (string Name, bool HasMembership, bool WantToPayMembership) CustomerInfo = ("", false, false);
         public static void CustomerMembership()
         {
             WriteLine("\n Welcome to the Customer Profile!");
-            Write("Do you have a membership? Yes? or No? : "); 
+            Write("Do you have a membership? Yes? or No? : ");
             string membership = ReadLine().ToLower();
             while (membership != "no" && membership != "yes")
             {
@@ -30,49 +33,61 @@ namespace Customer
                 string buyMembership = ReadLine();
                 if (buyMembership.ToLower() == "no")
                 {
+                    CustomerInfo = ("", false, false);
                     CustomerMenu();
+                }
+                else if (buyMembership.ToLower() == "yes")
+                {
+                    WriteLine("Please sign up for a new membership");
+                    Write("Username: ");
+                    string userName = ReadLine();
+                    Write("Password: ");
+                    string password = ReadLine();
+                    File.AppendAllText("membership.txt", $"{userName},{password}" + "\n");
+                    WriteLine("Successfully signed up for new membership! Please sign back in!");
+                    
+                    CustomerInfo = (userName, true, true);
+                    CustomerMembership();
                 }
                 else
                 {
-                    WriteLine("Please sign up a new account");
-                    Write("Username: ");
-                    var response1 = ReadLine();
-                    Write("Password: ");
-                    var response2 = ReadLine();
-                    File.AppendAllText("membership.txt", $"{response1},{response2}" + "\n");
-                    WriteLine("Successfully signed up into your new account!");
-                    CustomerMenu();
+                    WriteLine("Invalid answer! Please write yes or no!");
                 }
             }
             else if (membership.ToLower() == "yes")
             {
-                WriteLine("Please sign in to your account");
-                Write("Username: ");
-                var username = ReadLine();
-                Write("Password: ");
-                var password = ReadLine();
-                bool signInSuccess = false;
-                string[] Members;
-                Members = File.ReadAllLines("membership.txt");
-                foreach (var member in Members)
+                while (true)
                 {
-                    if (member.Contains("#"))
+                    WriteLine("Please sign in to your account");
+                    Write("Username: ");
+                    var username = ReadLine();
+                    Write("Password: ");
+                    var password = ReadLine();
+                    bool signInSuccess = false;
+                    string[] Members;
+                    Members = File.ReadAllLines("membership.txt");
+                    foreach (var member in Members)
                     {
-                        continue;
+                        if (member.Contains("#"))
+                        {
+                            continue;
+                        }
+                        string[] credentials = member.Split(',');
+                        if (username == credentials[0] & password == credentials[1])
+                        {
+                            signInSuccess = true;
+                        }
                     }
-                    string[] credentials = member.Split(',');
-                    if (username == credentials[0] & password == credentials[1])
+                    if (signInSuccess == true)
                     {
-                        signInSuccess = true;
+                        CustomerInfo = (username, true, false);
+                        WriteLine("Successfully signed in!");
+                        break;
                     }
-                }
-                if (signInSuccess == true)
-                {
-                    WriteLine("Successfully signed in!");
-                }
-                else
-                {
-                    WriteLine("Your username or password are incorrect. Please try again!");
+                    else
+                    {
+                        WriteLine("Your username or password are incorrect. Please try again!");
+                    }
                 }
                 CustomerMenu();
             }
@@ -105,7 +120,7 @@ namespace Customer
                             break;
                         case 4:
                             ChekoutTheItem();
-                            break;
+                            return;
                         default:
                             WriteLine("Invalid choice, please try again!");
                             break;
@@ -238,8 +253,6 @@ namespace Customer
         {
             ShowCart();
             string[] customerCart = File.ReadAllLines("customerCart.txt");
-            int number = 0;
-            // number = Math.Abs(number);
             double sum = 0;
 
             foreach (var item in customerCart)
@@ -247,31 +260,64 @@ namespace Customer
                 string[] itemInfo = item.Split(',');
                 double itemPrice;
                 bool isDigit = double.TryParse(itemInfo[2], out itemPrice);
-                // if (isDigit)
-                // {
-                //     sum = sum + (itemPrice);
-                // }
-                // while (number != 0)
-                // {
-                //     sum += number % 8;
-                //     number /= 8;
-                // }
-                // Console.WriteLine(sum);
+                if (isDigit)
+                {
+                    sum = sum + (itemPrice);
+                }
             }
+
+            if (CustomerInfo.WantToPayMembership)
+            {
+                sum = sum + membershipPrice;
+                WriteLine($"{membershipPrice} $ membership price has been applied!");
+            }
+
+            if (CustomerInfo.HasMembership)
+            {
+                sum = sum - sum * discountPercentage;
+                WriteLine($"Your membership {discountPercentage} % discount has been applied!");
+            }
+            sum = sum + sum * taxRate;
             WriteLine("The total price of your products is $ " + String.Format("{0:0.00}", sum));
             WriteLine("Thank you for shopping!");
             File.WriteAllText("customerCart.txt", "");
+            return;
         }
     }
 }
-// why price doesnt show at checkout
-// when checkout, user who has membership will have 30% discount.
-// if they want to buy membership, add $100 when checkout. 
-// add 8% tax when checkout for everyone. 
-// use list
 // test
-// tuples
 // parallel arrays
 // check if there is any whitespace
 // meaningful names
-// is my switch correct?
+
+/*
+{"check": "Overview & Reflection : Summary of your ultimate aspiration for the project (even going beyond this semester)", "points": 10},
+    {"check": "Overview & Reflection: Summary of why the project is interesting to you", "points": 10},
+    {"check": "Overview & Reflection: Summary of what portion of the project you actually attempted and completed for this submission", "points": 5},
+    {"check": "Overview & Reflection: Reflection on what you learned from this project.", "points": 10},
+    {"label": "Required Diagrams: flow chart (pick at least one complicated method from your program and make a flow chart mapping that flow)", "points": 5},
+    {"label": "Required Diagrams: psuedo code (pick at least one complicated method from your program and write pseudo code for that method)", "points": 5},
+    {"label": "Tests: At least four of your methods should each have at least two corresponding tests (3 points each, include a screenshot and summary of what that test accomplishes)", "points": 24},
+    {"label": "Implementation: Completed a project of size and scope roughly 4-5 times the size of a 1405 lab assignment", "points": 90},
+    {"label": "Implementation: Meaningful identifier names", "points": 10},
+    {"label": "Implementation: Good vertical whitespace (blank lines between methods and between logically related chunks of code)", "points": 10},
+    {"label": "Implementation: Good horizontal whitespace (space around assignments, between parameters, etc.) (just pressing Alt+Shift+F should take care of this for you)", "points": 10},
+    {"check": "Concepts (pick any 10): const (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): pass by reference (ref/out) (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): arrays (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"label": "Concepts (pick any 10): List (or other collections) (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"label": "Concepts (pick any 10): 2-D or jagged arrays (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): if/else (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): switch (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): at least 2 methods (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): at least 2 more methods (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): while / do-while (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): for (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): foreach (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): reading from a file (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): writing to a file (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): string formatting (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"check": "Concepts (pick any 10): get (banana proof) input from a user (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"label": "Concepts (pick any 10): tuples (include a screenshot and commentary of how/why you used that)", "points": 10},
+    {"label": "Concepts (pick any 10): parallel arrays or lists (include a screenshot and commentary of how/why you used that)", "points": 10},
+    */
