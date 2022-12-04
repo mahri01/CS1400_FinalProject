@@ -17,6 +17,8 @@ namespace Customer
         const double membershipPrice = 100;
         const double taxRate = 0.08;
         static (string Name, bool HasMembership, bool WantToPayMembership) CustomerInfo = ("", false, false);
+        public static string membershipFile = "membership.txt";
+        public static string customerCartFile = "customerCart.txt";
         public static void CustomerMembership()
         {
             WriteLine("\n Welcome to the Customer Profile!");
@@ -43,9 +45,18 @@ namespace Customer
                     string userName = ReadLine();
                     Write("Password: ");
                     string password = ReadLine();
-                    File.AppendAllText("membership.txt", $"{userName},{password}" + "\n");
+
+                    try
+                    {
+                        WriteUserTheFile(userName, password);
+                    }
+                    catch (System.Exception)
+                    {
+                        WriteLine("This username already exists, please try again");
+                        CustomerMembership();
+                    }
+
                     WriteLine("Successfully signed up for new membership! Please sign back in!");
-                    
                     CustomerInfo = (userName, true, true);
                     CustomerMembership();
                 }
@@ -63,21 +74,7 @@ namespace Customer
                     var username = ReadLine();
                     Write("Password: ");
                     var password = ReadLine();
-                    bool signInSuccess = false;
-                    string[] Members;
-                    Members = File.ReadAllLines("membership.txt");
-                    foreach (var member in Members)
-                    {
-                        if (member.Contains("#"))
-                        {
-                            continue;
-                        }
-                        string[] credentials = member.Split(',');
-                        if (username == credentials[0] & password == credentials[1])
-                        {
-                            signInSuccess = true;
-                        }
-                    }
+                    var signInSuccess = SignInUser(username, password);
                     if (signInSuccess == true)
                     {
                         CustomerInfo = (username, true, false);
@@ -92,6 +89,45 @@ namespace Customer
                 CustomerMenu();
             }
         }
+        public static void WriteUserTheFile(string userName, string password)
+        {
+            //before writing, check if the user already exists
+            var users = File.ReadAllLines(membershipFile);
+            foreach (var user in users)
+            {
+                if (user.Contains("#"))
+                {
+                    continue;
+                }
+                var credentials = user.Split(',');
+                if (userName == credentials[0])
+                {
+                    throw new Exception("User already exists");
+                }
+            }
+
+            File.AppendAllText(membershipFile, $"{userName},{password}" + "\n");
+        }
+        public static bool SignInUser(string userName, string password)
+        {
+            bool signInSuccess = false;
+            string[] Members;
+            Members = File.ReadAllLines(membershipFile);
+            foreach (var member in Members)
+            {
+                if (member.Contains("#"))
+                {
+                    continue;
+                }
+                string[] credentials = member.Split(',');
+                if (userName == credentials[0] & password == credentials[1])
+                {
+                    signInSuccess = true;
+                }
+            }
+            return signInSuccess;
+        }
+
         public static void CustomerMenu()
         {
             ReadAllProductsFromFile();
@@ -168,6 +204,46 @@ namespace Customer
                 indexNum++;
             }
         }
+        // can I test this method? I created this method to test the method below.
+        public static void AddToCart(string item, int quantity, string qtyLabel, double price)
+        {
+            string[] customerCart;
+            customerCart = File.ReadAllLines(customerCartFile);
+            bool alreadyInCart = false;
+            double totalPrice = price * quantity;
+
+            //check if the item is already in the cart
+            foreach (var cartItem in customerCart)
+            {
+                string[] cartItemInfo = cartItem.Split(',');
+                if (item == cartItemInfo[0])
+                {
+                    alreadyInCart = true;
+                    
+                    //item quatity looks like 2lb, so we need to split it to get the number
+                    string[] qtyInfo = cartItemInfo[1].Split(qtyLabel);
+                    int oldQuantity = Convert.ToInt32(qtyInfo[0]);
+                    int newQuantity = oldQuantity + quantity;
+                    double oldTotalPrice = Convert.ToDouble(cartItemInfo[2]);
+                    double newTotalPrice = oldTotalPrice + totalPrice;
+
+                    //find the index of the item in the cart
+                    int index = Array.IndexOf(customerCart, cartItem);
+
+                    //replace the old item with the new item
+                    customerCart[index] = $"{item},{newQuantity}{qtyLabel},{price},{newTotalPrice}";
+                    return;
+                }
+            }
+
+            if (!alreadyInCart)
+            {
+                Array.Resize(ref customerCart, customerCart.Length + 1);
+                customerCart[customerCart.Length - 1] = item + "," + quantity.ToString() + qtyLabel + "," + price.ToString() + "," + totalPrice.ToString();
+            }
+
+            File.WriteAllLines(customerCartFile, customerCart);
+        }
         public static void CustomerBuyInventory()
         {
             Write("What do you want to buy: ");
@@ -214,16 +290,10 @@ namespace Customer
                 WriteLine("The total cost is $" + String.Format("{0:0.00}", totalCost));
                 Write("Do you want to put it in your cart? ");
                 string userCart = ReadLine();
-                string[] customerCart;
-                var path = "customerCart.txt";
-                customerCart = File.ReadAllLines(path);
+               
                 if (userCart.ToLower() == "yes")
                 {
-                    Array.Resize(ref customerCart, customerCart.Length + 1);
-                    customerCart[customerCart.Length - 1] = itemName + "," + lb + itemQtyLbl + "," + totalCost.ToString();
-
-                    File.WriteAllLines(path, customerCart);
-                    WriteLine("Your item has been added into your cart!");
+                    
                 }
                 else if (userCart.ToLower() == "no")
                 {
@@ -238,6 +308,16 @@ namespace Customer
             {
                 WriteLine("Sorry, we don't have it right now");
             }
+            //write a pseudocode for this method
+            //1. ask the user what they want to buy
+            //2. check if the item is in the inventory
+            //3. if it is, ask how many lb or pieces they want to buy
+            //4. calculate the total cost
+            //5. ask the user if they want to put it in their cart
+            //6. if yes, add the item to the cart
+            //7. if no, go back to the main menu
+
+
         }
         public static void ShowCart()
         {
@@ -249,21 +329,17 @@ namespace Customer
                 WriteLine(itemInfo[0] + " " + itemInfo[1] + " " + "$" + itemInfo[2]);
             }
         }
+        // test
         public static void ChekoutTheItem()
         {
             ShowCart();
             string[] customerCart = File.ReadAllLines("customerCart.txt");
             double sum = 0;
 
-            foreach (var item in customerCart)
+            for (int i = 0; i < customerCart.Length; i++)
             {
-                string[] itemInfo = item.Split(',');
-                double itemPrice;
-                bool isDigit = double.TryParse(itemInfo[2], out itemPrice);
-                if (isDigit)
-                {
-                    sum = sum + (itemPrice);
-                }
+                string[] itemInfo = customerCart[i].Split(',');
+                sum += Convert.ToDouble(itemInfo[2]);
             }
 
             if (CustomerInfo.WantToPayMembership)
@@ -271,6 +347,7 @@ namespace Customer
                 sum = sum + membershipPrice;
                 WriteLine($"{membershipPrice} $ membership price has been applied!");
             }
+            // test if discount is applied
 
             if (CustomerInfo.HasMembership)
             {
@@ -282,42 +359,26 @@ namespace Customer
             WriteLine("Thank you for shopping!");
             File.WriteAllText("customerCart.txt", "");
             return;
+
+            // pseduocode for this method
+
+            //1. show the items in the cart
+            //2. calculate the total price
+            //3. apply membership discount if the customer has a membership
+            //4. apply membership price if the customer wants to buy a membership
+            //5. apply tax
+            //6. show the total price
+            //7. clear the cart
+            //8. return to the main menu
         }
     }
 }
-// test
-// parallel arrays
-// check if there is any whitespace
-// meaningful names
-
 /*
-{"check": "Overview & Reflection : Summary of your ultimate aspiration for the project (even going beyond this semester)", "points": 10},
-    {"check": "Overview & Reflection: Summary of why the project is interesting to you", "points": 10},
-    {"check": "Overview & Reflection: Summary of what portion of the project you actually attempted and completed for this submission", "points": 5},
-    {"check": "Overview & Reflection: Reflection on what you learned from this project.", "points": 10},
-    {"label": "Required Diagrams: flow chart (pick at least one complicated method from your program and make a flow chart mapping that flow)", "points": 5},
-    {"label": "Required Diagrams: psuedo code (pick at least one complicated method from your program and write pseudo code for that method)", "points": 5},
     {"label": "Tests: At least four of your methods should each have at least two corresponding tests (3 points each, include a screenshot and summary of what that test accomplishes)", "points": 24},
     {"label": "Implementation: Completed a project of size and scope roughly 4-5 times the size of a 1405 lab assignment", "points": 90},
     {"label": "Implementation: Meaningful identifier names", "points": 10},
     {"label": "Implementation: Good vertical whitespace (blank lines between methods and between logically related chunks of code)", "points": 10},
     {"label": "Implementation: Good horizontal whitespace (space around assignments, between parameters, etc.) (just pressing Alt+Shift+F should take care of this for you)", "points": 10},
-    {"check": "Concepts (pick any 10): const (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): pass by reference (ref/out) (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): arrays (include a screenshot and commentary of how/why you used that)", "points": 10},
     {"label": "Concepts (pick any 10): List (or other collections) (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"label": "Concepts (pick any 10): 2-D or jagged arrays (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): if/else (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): switch (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): at least 2 methods (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): at least 2 more methods (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): while / do-while (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): for (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): foreach (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): reading from a file (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): writing to a file (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): string formatting (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"check": "Concepts (pick any 10): get (banana proof) input from a user (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"label": "Concepts (pick any 10): tuples (include a screenshot and commentary of how/why you used that)", "points": 10},
     {"label": "Concepts (pick any 10): parallel arrays or lists (include a screenshot and commentary of how/why you used that)", "points": 10},
     */

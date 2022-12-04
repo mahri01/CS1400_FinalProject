@@ -9,7 +9,7 @@ namespace MoneySave
     {
         public static void Main(string[] path)
         {
-            WriteLine(" ----------Welcome to the MoneySave Store! ----------");
+            WriteLine(" ---------- Welcome to the MoneySave Store! ---------- ");
             while (true)
             {
                 CustomerProfile.CustomerMembership();
