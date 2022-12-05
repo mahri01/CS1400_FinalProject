@@ -18,7 +18,6 @@ public class Tests
     [TearDown]
     public void TearDown()
     {
-        //clear the files
         File.WriteAllText(memberShipFile, string.Empty);
         File.WriteAllText(customerCartFile, string.Empty);
         File.WriteAllText(paymentInfoFile, string.Empty);
@@ -37,7 +36,7 @@ public class Tests
         Assert.IsTrue(fileContent.Contains("testUser"));
     }
 
-     [Test]
+    [Test]
     public void checkIfNewMemberCanSignin()
     {
         var userName = "testUser";
@@ -45,7 +44,6 @@ public class Tests
 
         CustomerProfile.WriteUserToFile(userName, password);
 
-        //now call signInMethod
         var result = CustomerProfile.SignInUser(userName, password);
 
         Assert.IsTrue(result);
@@ -57,7 +55,6 @@ public class Tests
         var userName = "badUser";
         var password = "test";
 
-        //now call signInMethod
         var result = CustomerProfile.SignInUser(userName, password);
 
         Assert.IsFalse(result);
@@ -71,12 +68,10 @@ public class Tests
 
         CustomerProfile.WriteUserToFile(userName, password);
 
-        //check for exception that says user already exists
         Assert.Throws<Exception>(() => CustomerProfile.WriteUserToFile(userName, password));
-
     }
 
-      [Test]
+    [Test]
     public void checkIfUserExistsInTheFile()
     {
         var userName = "Maren";
@@ -84,9 +79,7 @@ public class Tests
 
         CustomerProfile.WriteUserToFile(userName, password);
 
-        //check for exception
         Assert.Throws<Exception>(() => CustomerProfile.WriteUserToFile(userName, password));
-
     }
 
     [Test]
@@ -106,7 +99,6 @@ public class Tests
         var fileContent = File.ReadAllText(customerCartFile);
 
         Assert.IsTrue(fileContent.Contains("apples"));
-
     }
 
     [Test]
@@ -143,7 +135,6 @@ public class Tests
 
         Assert.IsTrue(fileContent.Contains("John"));
         Assert.IsTrue(fileContent.Contains("cash"));
-
     }
     [Test]
     public void PaymentInfoCard()
@@ -158,6 +149,5 @@ public class Tests
 
         Assert.IsTrue(fileContent.Contains("John"));
         Assert.IsTrue(fileContent.Contains("card"));
-
     }
 }

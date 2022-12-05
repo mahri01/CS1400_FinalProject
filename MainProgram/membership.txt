@@ -6,3 +6,5 @@ holida.annam,0303
 helloWorld,123
 John,adams
 mylly,000
+maksad,ˣˠˡ
+test,ʟʳʹʡʳʶˣˠˡ

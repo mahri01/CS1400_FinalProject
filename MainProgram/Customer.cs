@@ -9,7 +9,6 @@ namespace Customer
 {
     public class CustomerProfile
     {
-        //Global variables we want to use
         static string[] Fruits = { };
         static string[] Vegetables = { };
         static string[] Snacks = { };
@@ -20,19 +19,20 @@ namespace Customer
         public static string membershipFile = "membership.txt";
         public static string customerCartFile = "customerCart.txt";
         public static string paymentInfoFile = "paymentInfo.txt";
+        static int EncryptionKey=1234567890;
         public static void CustomerMembership()
         {
-            WriteLine("\n Welcome to the Customer Profile!");
-            Write("Do you have a membership? Yes? or No? : ");
+            WriteLine("\nWelcome to the Customer Profile!");
+            Write("\nDo you have a membership? Yes? or No? : ");
             string membership = ReadLine().ToLower();
             while (membership != "no" && membership != "yes")
             {
-                Write("Invalid input, do you have a membership? Yes? or No? : ");
+                Write("\nInvalid input, do you have a membership? Yes? or No? : ");
                 membership = ReadLine().ToLower();
             }
             if (membership == "no")
             {
-                Write("If you have a membership, you will have 30% discount at the end! Do you want to buy a membership for $100: ");
+                Write("\nIf you have a membership, you will have 30% discount at the end! Do you want to buy a membership for $100: ");
                 string buyMembership = ReadLine();
                 if (buyMembership.ToLower() == "no")
                 {
@@ -41,7 +41,7 @@ namespace Customer
                 }
                 else if (buyMembership.ToLower() == "yes")
                 {
-                    WriteLine("Please sign up for a new membership");
+                    WriteLine("\nPlease sign up for a new membership");
                     Write("Username: ");
                     string userName = ReadLine();
                     Write("Password: ");
@@ -53,24 +53,24 @@ namespace Customer
                     }
                     catch (System.Exception)
                     {
-                        WriteLine("This username already exists, please try again");
+                        WriteLine("\nThis username already exists, please try again");
                         CustomerMembership();
                     }
 
-                    WriteLine("Successfully signed up for new membership! Please sign back in!");
+                    WriteLine("\nSuccessfully signed up for new membership! Please sign back in!");
                     CustomerInfo = (userName, true, true);
                     CustomerMembership();
                 }
                 else
                 {
-                    WriteLine("Invalid answer! Please write yes or no!");
+                    WriteLine("\nInvalid answer! Please write yes or no!");
                 }
             }
             else if (membership.ToLower() == "yes")
             {
                 while (true)
                 {
-                    WriteLine("Please sign in to your account");
+                    WriteLine("\nPlease sign in to your account");
                     Write("Username: ");
                     var username = ReadLine();
                     Write("Password: ");
@@ -79,17 +79,31 @@ namespace Customer
                     if (signInSuccess == true)
                     {
                         CustomerInfo = (username, true, false);
-                        WriteLine("Successfully signed in!");
+                        WriteLine("\nSuccessfully signed in!");
                         break;
                     }
                     else
                     {
-                        WriteLine("Your username or password are incorrect. Please try again!");
+                        WriteLine("\nYour username or password are incorrect. Please try again!");
                     }
                 }
                 CustomerMenu();
             }
         }
+
+        static string EncryptDecrypt(string userPassword)  
+        {  
+            StringBuilder inputStringBuild = new StringBuilder(userPassword);  
+            StringBuilder outStringBuild = new StringBuilder(userPassword.Length);  
+            char Textch;  
+            for (int iCount = 0; iCount < userPassword.Length; iCount++)  
+            {  
+                Textch = inputStringBuild[iCount];  
+                Textch = (char)(Textch ^ EncryptionKey);  
+                outStringBuild.Append(Textch);  
+            }  
+            return outStringBuild.ToString(); 
+        }  
         public static void WriteUserToFile(string userName, string password)
         {
             var users = File.ReadAllLines(membershipFile);
@@ -106,7 +120,7 @@ namespace Customer
                 }
             }
 
-            File.AppendAllText(membershipFile, $"{userName},{password}" + "\n");
+            File.AppendAllText(membershipFile, $"{userName},{EncryptDecrypt(password)}" + "\n");
         }
         public static bool SignInUser(string userName, string password)
         {
@@ -120,7 +134,7 @@ namespace Customer
                     continue;
                 }
                 string[] credentials = member.Split(',');
-                if (userName == credentials[0] & password == credentials[1])
+                if (userName == credentials[0] & password == EncryptDecrypt(credentials[1]))
                 {
                     signInSuccess = true;
                 }
@@ -134,11 +148,11 @@ namespace Customer
             {
                 try
                 {
-                    WriteLine("1. Show Inventory");
+                    WriteLine("\n1. Show Inventory");
                     WriteLine("2. Buy Inventory");
                     WriteLine("3. Show Cart");
                     WriteLine("4. Checkout");
-                    Write(" What would you like to do? ");
+                    Write(" \nWhat would you like to do? ");
                     int choice = Convert.ToInt32(ReadLine());
 
                     switch (choice)
@@ -157,13 +171,13 @@ namespace Customer
                             ChekoutTheItem();
                             return;
                         default:
-                            WriteLine("Invalid choice, please try again!");
+                            WriteLine("\nInvalid choice, please try again!");
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Invalid choice, please try again!");
+                    return;
                 }
             }
         }
@@ -175,7 +189,7 @@ namespace Customer
         }
         public static void ShowCustomerInventory()
         {
-            Write("We have fruits, vegetables and snacks. What do you want to see? ");
+            Write("\nWe have fruits, vegetables and snacks. What do you want to see? ");
             string inventoryType = ReadLine();
             string[] Items = { };
 
@@ -193,7 +207,9 @@ namespace Customer
             }
             else
             {
-                WriteLine("I can't recognize what you said. Please type fruits, vegetables or snacks ONLY! Thank you!");
+                WriteLine("\nI can't recognize what you said. Please type fruits, vegetables or snacks ONLY! Thank you!");
+                ShowCustomerInventory();
+                return;
             }
 
             int indexNum = 1;
@@ -223,10 +239,9 @@ namespace Customer
                     double oldTotalPrice = Convert.ToDouble(cartItemInfo[3]);
                     double newTotalPrice = oldTotalPrice + totalPrice;
 
-                    WriteLine($"You already have {oldQuantity}{qtyLabel} {item} in your cart. You are adding {quantity}{qtyLabel} more {item}. Your new total is {newQuantity}{qtyLabel} {item}.");
+                    WriteLine($"\n You already have {oldQuantity}{qtyLabel} {item} in your cart. You are adding {quantity}{qtyLabel} more {item}. Your new total is {newQuantity}{qtyLabel} {item}.");
                     //find the index of the item in the cart
                     int index = Array.IndexOf(customerCart, cartItem);
-
                     //replace the old item with the new item
                     customerCart[index] = $"{item},{newQuantity}{qtyLabel},{price},{String.Format("{0:0.00}", newTotalPrice)}";
                 }
@@ -242,7 +257,7 @@ namespace Customer
         }
         public static void CustomerBuyInventory()
         {
-            Write("What do you want to buy: ");
+            Write("\nPlease write an item name you want to buy: ");
             string itemName = ReadLine();
             bool itemFound = false;
             string itemQtyLbl = "";
@@ -280,29 +295,32 @@ namespace Customer
             }
             if (itemFound)
             {
-                WriteLine($"It costs ${itemInfo[1]}, how many lb or pieces do you want to buy?");
+                Write($"\nIt costs ${itemInfo[1]}, how many lb or pieces do you want to buy?");
                 var lb = ReadLine();
                 var totalCost = Convert.ToDouble(lb) * Convert.ToDouble(itemInfo[1]);
-                WriteLine("The total cost is $" + String.Format("{0:0.00}", totalCost));
+                WriteLine("\nThe total cost is $" + String.Format("{0:0.00}", totalCost));
                 AddToCart(itemName, Convert.ToInt32(lb), itemQtyLbl, Convert.ToDouble(itemInfo[1]));
-                WriteLine("Item added to cart!");
+                WriteLine("Item is added to your cart!");
             }
             else
             {
-                WriteLine("Sorry, we don't have it right now");
+                WriteLine("\nSorry, we don't have it right now");
             }
         }
         public static void ShowCart()
         {
             string[] customerCart = File.ReadAllLines(customerCartFile);
 
-            if(customerCart.Length == 0)
+            if (customerCart.Length == 0)
             {
-                WriteLine("Your cart is empty!");
+                WriteLine("\nYour cart is empty!");
                 return;
-            }else{
-                WriteLine("These are the items you have in your cart:");
             }
+            else
+            {
+                WriteLine("\nThese are the items you have in your cart:");
+            }
+
             foreach (string item in customerCart)
             {
                 string[] itemInfo = item.Split(',');
@@ -324,23 +342,23 @@ namespace Customer
             if (CustomerInfo.WantToPayMembership)
             {
                 sum = sum + MembershipPrice;
-                WriteLine($"{MembershipPrice} $ membership price has been applied!");
+                WriteLine($"\n {MembershipPrice} $ membership price has been applied!");
             }
+
             if (CustomerInfo.HasMembership)
             {
                 sum = sum - sum * DiscountPercentage;
-                WriteLine($"Your membership {DiscountPercentage} % discount has been applied!");
+                WriteLine("\nYour membership 30 % discount has been applied!");
             }
             sum = sum + sum * TaxRate;
-            WriteLine("The total price of your products is $ " + String.Format("{0:0.00}", sum));
+            WriteLine("\nThe total price of your products is $ " + String.Format("{0:0.00}", sum));
             MakePayment(sum);
             return;
         }
         public static void MakePayment(double sum)
         {
-            Write("Do you want to pay with cash or card? ");
+            Write("\nDo you want to pay with cash or card? ");
             string paymentMethod = ReadLine();
-
 
             if (paymentMethod.ToLower() == "cash")
             {
@@ -350,7 +368,7 @@ namespace Customer
                 {
                     WriteLine("Thank you for your purchase!");
                     WriteLine("Your change is $" + String.Format("{0:0.00}", cash - sum));
-                    WriteLine("Thank you for shopping!");
+                    WriteLine("\nThank you for shopping with SaveMoney!");
                     WriteLine("Have a nice day!");
                     PaymentToFile(sum, paymentMethod);
                     File.WriteAllText(customerCartFile, "");
@@ -358,7 +376,7 @@ namespace Customer
                 }
                 else
                 {
-                    WriteLine("Sorry, you don't have enough money!");
+                    WriteLine("\nSorry, you don't have enough money!");
                     ChekoutTheItem();
                 }
             }
@@ -368,16 +386,16 @@ namespace Customer
                 string cardNumber = ReadLine();
                 Write("Please enter your card pin: ");
                 string cardPin = ReadLine();
-                WriteLine("Thank you for your purchase!");
-                WriteLine("Thank you for shopping!");
+                WriteLine("\nThank you for your purchase!");
+                WriteLine("Thank you for shopping with SaveMoney!");
                 WriteLine("Have a nice day!");
-                 PaymentToFile(sum, paymentMethod);
+                PaymentToFile(sum, paymentMethod);
                 File.WriteAllText(customerCartFile, "");
                 CustomerMenu();
             }
             else
             {
-                WriteLine("Sorry, I can't recognize what you said! Please, say 'cash' or 'card'");
+                WriteLine("\nSorry, I can't recognize what you said! Please, say 'cash' or 'card'");
                 ChekoutTheItem();
             }
         }
@@ -386,17 +404,9 @@ namespace Customer
             string[] paymentInfo = { CustomerInfo.Name, TotalPrice.ToString(), PaymentType };
             string[] paymentInformation = File.ReadAllLines(paymentInfoFile);
             Array.Resize(ref paymentInformation, paymentInformation.Length + 1);
-            paymentInformation[paymentInformation.Length - 1] = $"{CustomerInfo.Name},{TotalPrice},{PaymentType}";
+            var customerName = CustomerInfo.Name == "" ? "Guest": CustomerInfo.Name;
+            paymentInformation[paymentInformation.Length - 1] = $"{customerName},{String.Format("{0:0.00}",TotalPrice)},{PaymentType}";
             File.WriteAllLines(paymentInfoFile, paymentInformation);
         }
     }
 }
-/*
-    {"label": "Tests: At least four of your methods should each have at least two corresponding tests (3 points each, include a screenshot and summary of what that test accomplishes)", "points": 24},
-    {"label": "Implementation: Completed a project of size and scope roughly 4-5 times the size of a 1405 lab assignment", "points": 90},
-    {"label": "Implementation: Meaningful identifier names", "points": 10},
-    {"label": "Implementation: Good vertical whitespace (blank lines between methods and between logically related chunks of code)", "points": 10},
-    {"label": "Implementation: Good horizontal whitespace (space around assignments, between parameters, etc.) (just pressing Alt+Shift+F should take care of this for you)", "points": 10},
-    {"label": "Concepts (pick any 10): List (or other collections) (include a screenshot and commentary of how/why you used that)", "points": 10},
-    {"label": "Concepts (pick any 10): parallel arrays or lists (include a screenshot and commentary of how/why you used that)", "points": 10},
-    */
