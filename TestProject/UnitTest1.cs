@@ -5,57 +5,88 @@ public class Tests
 {
     static string memberShipFile = "C:\\Users\\mahri.gurbanova\\Shopping_Project\\Proj\\TestProject\\membershipTest.txt";
     static string customerCartFile = "C:\\Users\\mahri.gurbanova\\Shopping_Project\\Proj\\TestProject\\customerCartTest.txt";
+    static string paymentInfoFile = "C:\\Users\\mahri.gurbanova\\Shopping_Project\\Proj\\TestProject\\PaymentInfoTest.txt";
+
     [SetUp]
     public void Setup()
     {
         CustomerProfile.membershipFile = memberShipFile;
         CustomerProfile.customerCartFile = customerCartFile;
+        CustomerProfile.paymentInfoFile = paymentInfoFile;
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        //clear the files
+        File.WriteAllText(memberShipFile, string.Empty);
+        File.WriteAllText(customerCartFile, string.Empty);
+        File.WriteAllText(paymentInfoFile, string.Empty);
     }
 
     [Test]
     public void signUpNewMember()
     {
-        var userName = "test";
+        var userName = "testUser";
         var password = "test";
 
-        CustomerProfile.WriteUserTheFile(userName, password);
+        CustomerProfile.WriteUserToFile(userName, password);
+
+        var fileContent = File.ReadAllText(memberShipFile);
+
+        Assert.IsTrue(fileContent.Contains("testUser"));
+    }
+
+     [Test]
+    public void checkIfNewMemberCanSignin()
+    {
+        var userName = "testUser";
+        var password = "test";
+
+        CustomerProfile.WriteUserToFile(userName, password);
 
         //now call signInMethod
         var result = CustomerProfile.SignInUser(userName, password);
 
         Assert.IsTrue(result);
-
-        //clear the file
-        File.WriteAllText(memberShipFile, string.Empty);
     }
+
     [Test]
-    public void signInMember()
+    public void signInBadUser()
     {
-        var userName = "bad";
-        var password = "user";
+        var userName = "badUser";
+        var password = "test";
 
         //now call signInMethod
         var result = CustomerProfile.SignInUser(userName, password);
 
         Assert.IsFalse(result);
-
-        //clear the file
-        File.WriteAllText(memberShipFile, string.Empty);
     }
 
     [Test]
     public void checkIfUserExists()
     {
-        var userName = "test2";
-        var password = "hello";
+        var userName = "Ayden";
+        var password = "Bash";
 
-        CustomerProfile.WriteUserTheFile(userName, password);
+        CustomerProfile.WriteUserToFile(userName, password);
+
+        //check for exception that says user already exists
+        Assert.Throws<Exception>(() => CustomerProfile.WriteUserToFile(userName, password));
+
+    }
+
+      [Test]
+    public void checkIfUserExistsInTheFile()
+    {
+        var userName = "Maren";
+        var password = "Bench";
+
+        CustomerProfile.WriteUserToFile(userName, password);
 
         //check for exception
-        Assert.Throws<Exception>(() => CustomerProfile.WriteUserTheFile(userName, password));
+        Assert.Throws<Exception>(() => CustomerProfile.WriteUserToFile(userName, password));
 
-        //clear the file
-        File.WriteAllText(memberShipFile, string.Empty);
     }
 
     [Test]
@@ -64,27 +95,69 @@ public class Tests
         var userName = "test3";
         var password = "hello";
 
-        CustomerProfile.WriteUserTheFile(userName, password);
+        CustomerProfile.WriteUserToFile(userName, password);
 
-        //now call signInMethod
         var result = CustomerProfile.SignInUser(userName, password);
 
         Assert.IsTrue(result);
 
-        //add to cart
         CustomerProfile.AddToCart("apples", 2, "lb", 2.99);
 
-        //check if the file is empty
         var fileContent = File.ReadAllText(customerCartFile);
 
-        //test if the item name in the cart is apples
         Assert.IsTrue(fileContent.Contains("apples"));
 
     }
 
     [Test]
-    public void ()
+    public void AddToCartExistingItem()
     {
+        var userName = "test3";
+        var password = "hello";
+
+        CustomerProfile.WriteUserToFile(userName, password);
+
+        var result = CustomerProfile.SignInUser(userName, password);
+
+        Assert.IsTrue(result);
+
+        CustomerProfile.AddToCart("apples", 2, "lb", 2.99);
+
+        CustomerProfile.AddToCart("apples", 2, "lb", 2.99);
+
+        var fileContent = File.ReadAllText(customerCartFile);
+
+        Assert.IsTrue(fileContent.Contains("4lb"));
+    }
+
+    [Test]
+    public void PaymentInfoCash()
+    {
+        CustomerProfile.CustomerInfo.Name = "John";
+        var totalPrice = 10.00;
+        var paymentType = "cash";
+
+        CustomerProfile.PaymentToFile(totalPrice, paymentType);
+
+        var fileContent = File.ReadAllText(paymentInfoFile);
+
+        Assert.IsTrue(fileContent.Contains("John"));
+        Assert.IsTrue(fileContent.Contains("cash"));
+
+    }
+    [Test]
+    public void PaymentInfoCard()
+    {
+        CustomerProfile.CustomerInfo.Name = "John";
+        var totalPrice = 10.00;
+        var paymentType = "card";
+
+        CustomerProfile.PaymentToFile(totalPrice, paymentType);
+
+        var fileContent = File.ReadAllText(paymentInfoFile);
+
+        Assert.IsTrue(fileContent.Contains("John"));
+        Assert.IsTrue(fileContent.Contains("card"));
 
     }
 }

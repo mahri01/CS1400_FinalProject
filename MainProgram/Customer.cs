@@ -13,12 +13,13 @@ namespace Customer
         static string[] Fruits = { };
         static string[] Vegetables = { };
         static string[] Snacks = { };
-        const double discountPercentage = 0.3;
-        const double membershipPrice = 100;
-        const double taxRate = 0.08;
-        static (string Name, bool HasMembership, bool WantToPayMembership) CustomerInfo = ("", false, false);
+        const double DiscountPercentage = 0.3;
+        const double MembershipPrice = 100;
+        const double TaxRate = 0.08;
+        public static (string Name, bool HasMembership, bool WantToPayMembership) CustomerInfo = ("", false, false);
         public static string membershipFile = "membership.txt";
         public static string customerCartFile = "customerCart.txt";
+        public static string paymentInfoFile = "paymentInfo.txt";
         public static void CustomerMembership()
         {
             WriteLine("\n Welcome to the Customer Profile!");
@@ -48,7 +49,7 @@ namespace Customer
 
                     try
                     {
-                        WriteUserTheFile(userName, password);
+                        WriteUserToFile(userName, password);
                     }
                     catch (System.Exception)
                     {
@@ -89,9 +90,8 @@ namespace Customer
                 CustomerMenu();
             }
         }
-        public static void WriteUserTheFile(string userName, string password)
+        public static void WriteUserToFile(string userName, string password)
         {
-            //before writing, check if the user already exists
             var users = File.ReadAllLines(membershipFile);
             foreach (var user in users)
             {
@@ -127,7 +127,6 @@ namespace Customer
             }
             return signInSuccess;
         }
-
         public static void CustomerMenu()
         {
             ReadAllProductsFromFile();
@@ -204,7 +203,6 @@ namespace Customer
                 indexNum++;
             }
         }
-        // can I test this method? I created this method to test the method below.
         public static void AddToCart(string item, int quantity, string qtyLabel, double price)
         {
             string[] customerCart;
@@ -212,34 +210,32 @@ namespace Customer
             bool alreadyInCart = false;
             double totalPrice = price * quantity;
 
-            //check if the item is already in the cart
             foreach (var cartItem in customerCart)
             {
                 string[] cartItemInfo = cartItem.Split(',');
-                if (item == cartItemInfo[0])
+
+                if (item.ToLower() == cartItemInfo[0].ToLower())
                 {
                     alreadyInCart = true;
-                    
-                    //item quatity looks like 2lb, so we need to split it to get the number
                     string[] qtyInfo = cartItemInfo[1].Split(qtyLabel);
                     int oldQuantity = Convert.ToInt32(qtyInfo[0]);
                     int newQuantity = oldQuantity + quantity;
-                    double oldTotalPrice = Convert.ToDouble(cartItemInfo[2]);
+                    double oldTotalPrice = Convert.ToDouble(cartItemInfo[3]);
                     double newTotalPrice = oldTotalPrice + totalPrice;
 
+                    WriteLine($"You already have {oldQuantity}{qtyLabel} {item} in your cart. You are adding {quantity}{qtyLabel} more {item}. Your new total is {newQuantity}{qtyLabel} {item}.");
                     //find the index of the item in the cart
                     int index = Array.IndexOf(customerCart, cartItem);
 
                     //replace the old item with the new item
-                    customerCart[index] = $"{item},{newQuantity}{qtyLabel},{price},{newTotalPrice}";
-                    return;
+                    customerCart[index] = $"{item},{newQuantity}{qtyLabel},{price},{String.Format("{0:0.00}", newTotalPrice)}";
                 }
             }
 
             if (!alreadyInCart)
             {
                 Array.Resize(ref customerCart, customerCart.Length + 1);
-                customerCart[customerCart.Length - 1] = item + "," + quantity.ToString() + qtyLabel + "," + price.ToString() + "," + totalPrice.ToString();
+                customerCart[customerCart.Length - 1] = item + "," + quantity.ToString() + qtyLabel + "," + price.ToString() + "," + String.Format("{0:0.00}", totalPrice);
             }
 
             File.WriteAllLines(customerCartFile, customerCart);
@@ -288,52 +284,35 @@ namespace Customer
                 var lb = ReadLine();
                 var totalCost = Convert.ToDouble(lb) * Convert.ToDouble(itemInfo[1]);
                 WriteLine("The total cost is $" + String.Format("{0:0.00}", totalCost));
-                Write("Do you want to put it in your cart? ");
-                string userCart = ReadLine();
-               
-                if (userCart.ToLower() == "yes")
-                {
-                    
-                }
-                else if (userCart.ToLower() == "no")
-                {
-                    CustomerMenu();
-                }
-                else
-                {
-                    WriteLine("Sorry, I can't recognize what you said! Please, say 'yes' or 'no'");
-                }
+                AddToCart(itemName, Convert.ToInt32(lb), itemQtyLbl, Convert.ToDouble(itemInfo[1]));
+                WriteLine("Item added to cart!");
             }
             else
             {
                 WriteLine("Sorry, we don't have it right now");
             }
-            //write a pseudocode for this method
-            //1. ask the user what they want to buy
-            //2. check if the item is in the inventory
-            //3. if it is, ask how many lb or pieces they want to buy
-            //4. calculate the total cost
-            //5. ask the user if they want to put it in their cart
-            //6. if yes, add the item to the cart
-            //7. if no, go back to the main menu
-
-
         }
         public static void ShowCart()
         {
-            WriteLine("These are the items you have in your cart:");
-            string[] customerCart = File.ReadAllLines("customerCart.txt");
+            string[] customerCart = File.ReadAllLines(customerCartFile);
+
+            if(customerCart.Length == 0)
+            {
+                WriteLine("Your cart is empty!");
+                return;
+            }else{
+                WriteLine("These are the items you have in your cart:");
+            }
             foreach (string item in customerCart)
             {
                 string[] itemInfo = item.Split(',');
                 WriteLine(itemInfo[0] + " " + itemInfo[1] + " " + "$" + itemInfo[2]);
             }
         }
-        // test
         public static void ChekoutTheItem()
         {
             ShowCart();
-            string[] customerCart = File.ReadAllLines("customerCart.txt");
+            string[] customerCart = File.ReadAllLines(customerCartFile);
             double sum = 0;
 
             for (int i = 0; i < customerCart.Length; i++)
@@ -344,32 +323,71 @@ namespace Customer
 
             if (CustomerInfo.WantToPayMembership)
             {
-                sum = sum + membershipPrice;
-                WriteLine($"{membershipPrice} $ membership price has been applied!");
+                sum = sum + MembershipPrice;
+                WriteLine($"{MembershipPrice} $ membership price has been applied!");
             }
-            // test if discount is applied
-
             if (CustomerInfo.HasMembership)
             {
-                sum = sum - sum * discountPercentage;
-                WriteLine($"Your membership {discountPercentage} % discount has been applied!");
+                sum = sum - sum * DiscountPercentage;
+                WriteLine($"Your membership {DiscountPercentage} % discount has been applied!");
             }
-            sum = sum + sum * taxRate;
+            sum = sum + sum * TaxRate;
             WriteLine("The total price of your products is $ " + String.Format("{0:0.00}", sum));
-            WriteLine("Thank you for shopping!");
-            File.WriteAllText("customerCart.txt", "");
+            MakePayment(sum);
             return;
+        }
+        public static void MakePayment(double sum)
+        {
+            Write("Do you want to pay with cash or card? ");
+            string paymentMethod = ReadLine();
 
-            // pseduocode for this method
 
-            //1. show the items in the cart
-            //2. calculate the total price
-            //3. apply membership discount if the customer has a membership
-            //4. apply membership price if the customer wants to buy a membership
-            //5. apply tax
-            //6. show the total price
-            //7. clear the cart
-            //8. return to the main menu
+            if (paymentMethod.ToLower() == "cash")
+            {
+                Write("How much money do you have? ");
+                double cash = Convert.ToDouble(ReadLine());
+                if (cash >= sum)
+                {
+                    WriteLine("Thank you for your purchase!");
+                    WriteLine("Your change is $" + String.Format("{0:0.00}", cash - sum));
+                    WriteLine("Thank you for shopping!");
+                    WriteLine("Have a nice day!");
+                    PaymentToFile(sum, paymentMethod);
+                    File.WriteAllText(customerCartFile, "");
+                    CustomerMenu();
+                }
+                else
+                {
+                    WriteLine("Sorry, you don't have enough money!");
+                    ChekoutTheItem();
+                }
+            }
+            else if (paymentMethod.ToLower() == "card")
+            {
+                Write("Please enter your card number: ");
+                string cardNumber = ReadLine();
+                Write("Please enter your card pin: ");
+                string cardPin = ReadLine();
+                WriteLine("Thank you for your purchase!");
+                WriteLine("Thank you for shopping!");
+                WriteLine("Have a nice day!");
+                 PaymentToFile(sum, paymentMethod);
+                File.WriteAllText(customerCartFile, "");
+                CustomerMenu();
+            }
+            else
+            {
+                WriteLine("Sorry, I can't recognize what you said! Please, say 'cash' or 'card'");
+                ChekoutTheItem();
+            }
+        }
+        public static void PaymentToFile(double TotalPrice, string PaymentType)
+        {
+            string[] paymentInfo = { CustomerInfo.Name, TotalPrice.ToString(), PaymentType };
+            string[] paymentInformation = File.ReadAllLines(paymentInfoFile);
+            Array.Resize(ref paymentInformation, paymentInformation.Length + 1);
+            paymentInformation[paymentInformation.Length - 1] = $"{CustomerInfo.Name},{TotalPrice},{PaymentType}";
+            File.WriteAllLines(paymentInfoFile, paymentInformation);
         }
     }
 }
